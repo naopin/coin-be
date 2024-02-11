@@ -8,8 +8,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/joho/godotenv"     //追加
-	"github.com/naopin/coin-be/db" //追加
+	"github.com/joho/godotenv" //追加
 	db "github.com/naopin/coin-be/db/migrations"
 	"github.com/naopin/coin-be/graph"
 )
