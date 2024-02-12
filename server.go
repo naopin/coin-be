@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv" //追加
 	db "github.com/naopin/coin-be/db/migrations"
 	"github.com/naopin/coin-be/graph"
+	"github.com/naopin/coin-be/loader"
 )
 
 const defaultPort = "6060"
@@ -24,6 +25,8 @@ func main() {
 
 	//データベースへの接続処理
 	db := db.ConnectGORM() //追加
+	// loaderの初期化
+	ldrs := loader.NewLoaders(db)
 
 	// resolver内でデータベースを扱えるように設定
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
@@ -31,8 +34,10 @@ func main() {
 		DB: db, // 追加
 	}}))
 
+	fmt.Println("server.go1")
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	fmt.Println("server.go2")
+	http.Handle("/query", loader.Middleware(ldrs, srv))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))

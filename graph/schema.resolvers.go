@@ -11,19 +11,19 @@ import (
 	"math/big"
 
 	"github.com/naopin/coin-be/graph/model"
+	"github.com/naopin/coin-be/loader"
 )
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
 	//ランダムな数字の生成
-	fmt.Println("aaaa")
 	rand, _ := rand.Int(rand.Reader, big.NewInt(100))
 	todo := model.Todo{
 		Text:   input.Text,
 		ID:     fmt.Sprintf("T%d", rand),
 		UserId: input.UserID,
 	}
-	r.DB.Create(&todo)
+	r.DB.Debug().Create(&todo)
 	return &todo, nil
 }
 
@@ -35,32 +35,44 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		ID:   fmt.Sprintf("U%d", rand),
 		Name: input.Name,
 	}
-	r.DB.Create(&user)
+	r.DB.Debug().Create(&user)
 	return &user, nil
 }
 
 // Todos is the resolver for the todos field.
 func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
 	todos := []*model.Todo{}
-	r.DB.Find(&todos)
+	r.DB.Debug().Find(&todos)
 	return todos, nil
 }
 
+// Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
+	fmt.Println("1")
 	user := []*model.User{}
-	r.DB.Find(&user)
+	fmt.Println("2")
+	r.DB.Debug().Find(&user)
+	fmt.Println("3")
 	return user, nil
 }
 
 // User is the resolver for the user field.
 func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: User - user"))
+	fmt.Println("user関数")
+	user, err := loader.LoadUser(ctx, obj.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 // Todos is the resolver for the todos field.
 func (r *userResolver) Todos(ctx context.Context, obj *model.User) ([]*model.Todo, error) {
-	todo := []*model.Todo{}
-	r.DB.Where("user_id = ?", obj.ID).Find(&todo)
+	fmt.Println("todos関数")
+	todo, err := loader.LoadTodo(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
 	return todo, nil
 }
 
@@ -80,3 +92,13 @@ type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type todoResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *queryResolver) Members(ctx context.Context) ([]*model.User, error) {
+	panic(fmt.Errorf("not implemented: Members - members"))
+}
