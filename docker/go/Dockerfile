@@ -1,7 +1,6 @@
-# goバージョン
-FROM golang:1.19.1-alpine
+FROM --platform=linux/amd64 golang:1.19.1-alpine
 
-RUN apk update && apk add git && apk add alpine-sdk
+RUN apk update && apk add git \gcc && apk add alpine-sdk
 
 ENV APP_ROOT /app
 
