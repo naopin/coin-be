@@ -14,7 +14,7 @@ import (
 	"github.com/naopin/coin-be/loader"
 )
 
-const defaultPort = "6060"
+const defaultPort = "8080"
 
 func main() {
 	loadEnv() //追加
