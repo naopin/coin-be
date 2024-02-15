@@ -8,8 +8,8 @@ type Todo {
 type User {
   id: ID!
   name: String!
-  todos: [Todo!]!
-
+  email: String!
+  password: String!
 }
 
 type Query {
@@ -26,6 +26,8 @@ input NewTodo {
 
 input NewUser {
   name: String!
+  email: String!
+  password: String!
  }
 
 
