@@ -32,8 +32,10 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	//ランダムな値の生成
 	rand, _ := rand.Int(rand.Reader, big.NewInt(100))
 	user := model.User{
-		ID:   fmt.Sprintf("U%d", rand),
-		Name: input.Name,
+		ID:       fmt.Sprintf("U%d", rand),
+		Name:     input.Name,
+		Email:    input.Email,
+		Password: input.Password,
 	}
 	r.DB.Debug().Create(&user)
 	return &user, nil
@@ -48,11 +50,8 @@ func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	fmt.Println("1")
 	user := []*model.User{}
-	fmt.Println("2")
 	r.DB.Debug().Find(&user)
-	fmt.Println("3")
 	return user, nil
 }
 
@@ -66,16 +65,6 @@ func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (*model.User, 
 	return user, nil
 }
 
-// Todos is the resolver for the todos field.
-func (r *userResolver) Todos(ctx context.Context, obj *model.User) ([]*model.Todo, error) {
-	fmt.Println("todos関数")
-	todo, err := loader.LoadTodo(ctx, obj.ID)
-	if err != nil {
-		return nil, err
-	}
-	return todo, nil
-}
-
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
@@ -85,13 +74,9 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 // Todo returns TodoResolver implementation.
 func (r *Resolver) Todo() TodoResolver { return &todoResolver{r} }
 
-// User returns UserResolver implementation.
-func (r *Resolver) User() UserResolver { return &userResolver{r} }
-
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type todoResolver struct{ *Resolver }
-type userResolver struct{ *Resolver }
 
 // !!! WARNING !!!
 // The code below was going to be deleted when updating resolvers. It has been copied here so you have
@@ -99,6 +84,17 @@ type userResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *userResolver) Todos(ctx context.Context, obj *model.User) ([]*model.Todo, error) {
+	fmt.Println("todos関数")
+	todo, err := loader.LoadTodo(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return todo, nil
+}
+
+type userResolver struct{ *Resolver }
+
 func (r *queryResolver) Members(ctx context.Context) ([]*model.User, error) {
 	panic(fmt.Errorf("not implemented: Members - members"))
 }

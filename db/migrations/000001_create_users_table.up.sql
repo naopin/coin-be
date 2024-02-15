@@ -1,10 +1,9 @@
-
-
-
 BEGIN;
-  CREATE TABLE IF NOT EXISTS users(
-    id VARCHAR (255) UNIQUE NOT NULL PRIMARY KEY,
-    name VARCHAR (255)
+  CREATE TABLE IF NOT EXISTS users (
+    id VARCHAR(255) PRIMARY KEY,
+    name VARCHAR(255),
+    email VARCHAR(255),
+    password VARCHAR(255)
   );
-  CREATE INDEX on users(id);
+  CREATE INDEX ON users(id);
 COMMIT;
