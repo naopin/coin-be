@@ -12,8 +12,9 @@ model:
 
 resolver:
   layout: follow-schema
-  dir: graph
-  package: graph
+  dir: graph/resolver
+  package: resolver
+  filename_template: "{name}.resolvers.go"
 
 autobind:
   - "github.com/naopin/coin-be/graph/model"
