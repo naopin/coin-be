@@ -5,9 +5,31 @@ package graph
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 import (
-	"gorm.io/gorm" //追加
+	"github.com/naopin/coin-be/graph/generated"
+	service "github.com/naopin/coin-be/services"
+	"gorm.io/gorm"
+	//追加
 )
 
 type Resolver struct {
-	DB *gorm.DB
+	DB          *gorm.DB
+	UserService *service.UserService
+}
+
+// ========== Query ==========
+type queryResolver struct {
+	*Resolver
+}
+
+// ========== Mutation ==========
+type mutationResolver struct {
+	*Resolver
+}
+
+func (r *Resolver) Query() generated.QueryResolver {
+	return &queryResolver{r}
+}
+
+func (r *Resolver) Mutation() generated.MutationResolver {
+	return &mutationResolver{r}
 }
