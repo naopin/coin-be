@@ -5,16 +5,9 @@ package model
 type Mutation struct {
 }
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
-}
-
-type NewUser struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 type Query struct {
+}
+
+type Token struct {
+	AccessToken string `json:"accessToken"`
 }

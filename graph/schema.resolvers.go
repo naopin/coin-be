@@ -6,95 +6,93 @@ package graph
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
-	"math/big"
+	"log"
+	"time"
 
+	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/naopin/coin-be/graph/model"
-	"github.com/naopin/coin-be/loader"
+	"github.com/naopin/coin-be/util"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	//ランダムな数字の生成
-	rand, _ := rand.Int(rand.Reader, big.NewInt(100))
-	todo := model.Todo{
-		Text:   input.Text,
-		ID:     fmt.Sprintf("T%d", rand),
-		UserId: input.UserID,
-	}
-	r.DB.Debug().Create(&todo)
-	return &todo, nil
-}
+// SignUp is the resolver for the signUp field.
+func (r *mutationResolver) SignUp(ctx context.Context, input model.CreateUserInput) (*model.Token, error) {
 
-// CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
+	user, err := r.UserService.GetUserByEmail(input.Email)
+	if err != nil {
+		log.Fatal("Get user by email error", err)
+		return nil, util.AppError{
+			Code:    util.ErrorCodeRequired,
+			Message: err.Error(),
+		}
+	}
+
+	if user.ID != "" {
+		return nil, util.AppError{
+			Code:    util.ErrorCodeRequired,
+			Message: "Email address provided is already registered",
+		}
+	}
+
+	// createUser, err := r.UserService.CreateItem(ctx, input)
+
+	// ctx, cancel := context.WithTimeout(ctx, uc.timeout)
+	// defer cancel()
+
+	// exsitUser, err := repository.GetUserByEmail(ctx, email)
+
+	// if exsitUser.ID != "" {
+	// 	return nil, fmt.Errorf("既に存在するユーザーです")
+	// }
+
+	// hashedPassword, _ := util.HashPassword(input.Password)
+
 	//ランダムな値の生成
-	rand, _ := rand.Int(rand.Reader, big.NewInt(100))
-	user := model.User{
-		ID:       fmt.Sprintf("U%d", rand),
-		Name:     input.Name,
-		Email:    input.Email,
-		Password: input.Password,
+	// rand, _ := rand.Int(rand.Reader, big.NewInt(100))
+	// hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("パスワードエラーです")
+	// }
+
+	// fmt.Println(hashedPassword, "hashedPassword")
+	// user := model.User{
+	// 	ID:       fmt.Sprintf("U%d", rand),
+	// 	Name:     input.Name,
+	// 	Email:    input.Email,
+	// 	Password: string(hashedPassword),
+	// }
+	// r.DB.Debug().Create(&user)
+
+	// ペイロードの作成
+	claims := jwt.MapClaims{
+		"sub": "userid",
+		"exp": time.Now().Add(time.Hour * 72).Unix(), // 72時間が有効期限
 	}
-	r.DB.Debug().Create(&user)
-	return &user, nil
+
+	// トークン生成
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// トークンに署名を付与
+	accessToken, _ := token.SignedString([]byte("ACCESS_SECRET_KEY"))
+	fmt.Println("accessToken:", accessToken)
+
+	// // tokenの認証
+	// tokenaa, _ := VerifyToken(accessToken)
+
+	// // ペイロードの読み出し
+	// claimsss := tokenaa.Claims.(jwt.MapClaims)
+
+	// fmt.Println(claimsss, "claimsss")
+
+	return &model.Token{AccessToken: accessToken}, nil
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	todos := []*model.Todo{}
-	r.DB.Debug().Find(&todos)
-	return todos, nil
+// SignIn is the resolver for the signIn field.
+func (r *mutationResolver) SignIn(ctx context.Context, input model.CreateUserInput) (*model.Token, error) {
+	panic(fmt.Errorf("not implemented: SignIn - signIn"))
 }
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	user := []*model.User{}
-	r.DB.Debug().Find(&user)
-	return user, nil
-}
-
-// User is the resolver for the user field.
-func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (*model.User, error) {
-	fmt.Println("user関数")
-	user, err := loader.LoadUser(ctx, obj.UserId)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-// Mutation returns MutationResolver implementation.
-func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
-
-// Query returns QueryResolver implementation.
-func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
-
-// Todo returns TodoResolver implementation.
-func (r *Resolver) Todo() TodoResolver { return &todoResolver{r} }
-
-type mutationResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
-type todoResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *userResolver) Todos(ctx context.Context, obj *model.User) ([]*model.Todo, error) {
-	fmt.Println("todos関数")
-	todo, err := loader.LoadTodo(ctx, obj.ID)
-	if err != nil {
-		return nil, err
-	}
-	return todo, nil
-}
-
-type userResolver struct{ *Resolver }
-
-func (r *queryResolver) Members(ctx context.Context) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented: Members - members"))
+	panic(fmt.Errorf("not implemented: Users - users"))
 }

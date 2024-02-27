@@ -1,0 +1,19 @@
+# ========== User Schema ==========
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  password: String!
+}
+
+# ========== Input ==========
+input CreateUserInput {
+  name: String!
+  email: String!
+  password: String!
+}
+
+# ========== Output ==========
+type Token {
+  accessToken: String!
+}

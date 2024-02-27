@@ -1,0 +1,17 @@
+# ========== Root ==========
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+# ========== Query ==========
+type Query {
+  users: [User!]!
+}
+
+# ========== Mutation ==========
+type Mutation {
+  signUp(input: CreateUserInput!): Token!
+  signIn(input: CreateUserInput!): Token!
+  login(input: CreateUserInput!): Token!
+}
