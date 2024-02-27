@@ -13,9 +13,9 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/joho/godotenv" //追加
 	db "github.com/naopin/coin-be/db/migrations"
-	"github.com/naopin/coin-be/graph"
 	"github.com/naopin/coin-be/graph/generated"
 	"github.com/naopin/coin-be/graph/repository"
+	"github.com/naopin/coin-be/graph/resolver"
 	"github.com/naopin/coin-be/loader"
 	service "github.com/naopin/coin-be/services"
 	"github.com/naopin/coin-be/util"
@@ -40,15 +40,15 @@ func main() {
 	// UserService のインスタンスを生成し、依存関係の注入を行う
 	userService := service.NewUserService(userRepository)
 	// resolver内でデータベースを扱えるように設定
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{
 		// resolver.goで宣言した構造体にデータベースの値を受け渡し
 		DB:          db, // 追加
 		UserService: userService,
 	}}))
 
+	// gqlerror設定
 	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
 		err := graphql.DefaultErrorPresenter(ctx, e)
-
 		var appErr util.AppError
 		if errors.As(err, &appErr) {
 			return &gqlerror.Error{
@@ -62,21 +62,15 @@ func main() {
 		return err
 	})
 
-	fmt.Println("server.go1")
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	fmt.Println("server.go2")
 	http.Handle("/query", loader.Middleware(ldrs, srv))
-
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
-// ここで.envファイル全体を読み込みます。
-// この読み込み処理がないと、個々の環境変数が取得出来ません。
 func loadEnv() {
-	// 読み込めなかったら err にエラーが入ります。
 	err := godotenv.Load(".env")
 	if err != nil {
-		fmt.Printf("読み込み出来ませんでした: %v", err)
+		fmt.Printf("Failed to load the ENV: %v", err)
 	}
 }

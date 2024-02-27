@@ -266,23 +266,22 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema/schema.graphql", Input: `# ========== Root ==========
-schema {
-  query: Query
-  mutation: Mutation
-}
-
-# ========== Query ==========
-type Query {
-  users: [User!]!
-}
-
-# ========== Mutation ==========
-type Mutation {
+	{Name: "../schema/mutation.graphql", Input: `# ========== Mutation ==========
+extend type Mutation {
   signUp(input: CreateUserInput!): Token!
+}
+
+extend type Mutation {
   signIn(input: CreateUserInput!): Token!
 }
 `, BuiltIn: false},
+	{Name: "../schema/query.graphql", Input: `# ========== Query ==========
+extend type Query {
+  users: [User!]!
+}
+
+`, BuiltIn: false},
+	{Name: "../schema/schema.graphql", Input: ``, BuiltIn: false},
 	{Name: "../schema/user.graphql", Input: `# ========== User Schema ==========
 type User {
   id: ID!

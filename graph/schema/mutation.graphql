@@ -1,0 +1,8 @@
+# ========== Mutation ==========
+extend type Mutation {
+  signUp(input: CreateUserInput!): Token!
+}
+
+extend type Mutation {
+  signIn(input: CreateUserInput!): Token!
+}
