@@ -52,6 +52,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Tasks func(childComplexity int) int
 		Users func(childComplexity int) int
 	}
 
@@ -72,6 +73,7 @@ type MutationResolver interface {
 	SignIn(ctx context.Context, input model.CreateUserInput) (*model.Token, error)
 }
 type QueryResolver interface {
+	Tasks(ctx context.Context) ([]*model.User, error)
 	Users(ctx context.Context) ([]*model.User, error)
 }
 
@@ -117,6 +119,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.SignUp(childComplexity, args["input"].(model.CreateUserInput)), true
+
+	case "Query.tasks":
+		if e.complexity.Query.Tasks == nil {
+			break
+		}
+
+		return e.complexity.Query.Tasks(childComplexity), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -266,23 +275,20 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema/mutation.graphql", Input: `# ========== Mutation ==========
-extend type Mutation {
-  signUp(input: CreateUserInput!): Token!
+	{Name: "../schema/schema.graphql", Input: `# ========== Root ==========
+schema {
+  query: Query
+  mutation: Mutation
 }
 
-extend type Mutation {
-  signIn(input: CreateUserInput!): Token!
-}
 `, BuiltIn: false},
-	{Name: "../schema/query.graphql", Input: `# ========== Query ==========
+	{Name: "../schema/task/task_query.graphql", Input: `# ========== Query ==========
 extend type Query {
-  users: [User!]!
+  tasks: [User!]!
 }
 
 `, BuiltIn: false},
-	{Name: "../schema/schema.graphql", Input: ``, BuiltIn: false},
-	{Name: "../schema/user.graphql", Input: `# ========== User Schema ==========
+	{Name: "../schema/user/user.graphql", Input: `# ========== User Schema ==========
 type User {
   id: ID!
   name: String!
@@ -301,6 +307,22 @@ input CreateUserInput {
 type Token {
   accessToken: String!
 }
+`, BuiltIn: false},
+	{Name: "../schema/user/user_mutation.graphql", Input: `# ========== Mutation ==========
+
+extend type Mutation {
+  signUp(input: CreateUserInput!): Token!
+}
+
+extend type Mutation {
+  signIn(input: CreateUserInput!): Token!
+}
+`, BuiltIn: false},
+	{Name: "../schema/user/user_query.graphql", Input: `# ========== Query ==========
+extend type Query {
+  users: [User!]!
+}
+
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -506,6 +528,60 @@ func (ec *executionContext) fieldContext_Mutation_signIn(ctx context.Context, fi
 	if fc.Args, err = ec.field_Mutation_signIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_tasks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_tasks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Tasks(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋnaopinᚋcoinᚑbeᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_tasks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "password":
+				return ec.fieldContext_User_password(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -2810,6 +2886,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "tasks":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_tasks(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "users":
 			field := field
 

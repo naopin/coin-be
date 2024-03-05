@@ -1,0 +1,5 @@
+# ========== Query ==========
+extend type Query {
+  tasks: [User!]!
+}
+

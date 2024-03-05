@@ -56,7 +56,6 @@ func (r *mutationResolver) SignUp(ctx context.Context, input model.CreateUserInp
 	// fmt.Println(claimsss, "claimsss")
 
 	return &model.Token{AccessToken: accessToken}, nil
-
 }
 
 // SignIn is the resolver for the signIn field.
