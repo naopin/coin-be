@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/naopin/coin-be/graph/generated"
 	"github.com/naopin/coin-be/graph/model"
 )
 
@@ -16,8 +15,3 @@ import (
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	panic(fmt.Errorf("not implemented: Users - users"))
 }
-
-// Query returns generated.QueryResolver implementation.
-func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
-
-type queryResolver struct{ *Resolver }
